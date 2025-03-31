@@ -1,23 +1,26 @@
 import sqlite3 from "sqlite3";
+import dotenv from 'dotenv';
+
+dotenv.config(); // Carrega as variáveis do arquivo .env
 
 const SQLite = sqlite3.verbose();
+const dbPath = process.env.DB_PATH || 'src/database/banco.db'; // Usar caminho do banco de dados configurado
 
-// Pega o caminho do banco de dados da variável de ambiente DB_PATH ou usa o caminho local padrão
-const dbPath = process.env.DB_PATH || "./src/database/banco.db";
+const db = new SQLite.Database(dbPath, SQLite.OPEN_READWRITE, (err) => {
+    if (err) {
+        console.error("Erro ao conectar com banco: " + err.message);
+    } else {
+        console.log('Conectado ao banco de dados');
+    }
+});
 
-// Função para executar consultas no banco
 function query(command, params, method = 'all') {
-    return new Promise(function (resolve, reject) {
-        db[method](command, params, function (error, result) {
+    return new Promise((resolve, reject) => {
+        db[method](command, params, (error, result) => {
             if (error) reject(error);
             else resolve(result);
         });
     });
 }
-
-// Conectar ao banco de dados com o caminho configurado
-const db = new SQLite.Database(dbPath, SQLite.OPEN_READWRITE, (err) => {
-    if (err) return console.log("Erro ao conectar com banco: " + err.message);
-});
 
 export { db, query };
