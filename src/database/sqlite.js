@@ -24,3 +24,4 @@ function query(command, params, method = 'all') {
 }
 
 export { db, query };
+
