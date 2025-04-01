@@ -1,5 +1,6 @@
 import sqlite3 from "sqlite3";
 import dotenv from 'dotenv';
+import Database from 'better-sqlite3'
 
 dotenv.config(); // Carrega as variáveis do arquivo .env
 

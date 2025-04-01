@@ -4,7 +4,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "render-build": "npm rebuild sqlite3 --build-from-source"
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +13,7 @@
   "type": "module",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.9.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
