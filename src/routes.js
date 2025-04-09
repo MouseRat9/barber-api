@@ -22,7 +22,13 @@ router.get("/users/profile", jwt.ValidateToken, controllerUser.Profile);
 router.get("/appointments", jwt.ValidateToken, controllerAppointment.ListarByUser);
 router.post("/appointments", jwt.ValidateToken, controllerAppointment.Inserir);
 router.delete("/appointments/:id_appointment", jwt.ValidateToken, controllerAppointment.Excluir);
-router.get("/appointments/availability", jwt.ValidateToken, controllerAppointment.VerificarDisponibilidade);
+
+// Rota para verificar disponibilidade (pode ser acessada sem autenticação)
+router.get("/appointments/availability", controllerAppointment.VerificarDisponibilidade);
+
+// Rotas para bloquear/desbloquear dias
+router.post("/appointments/block-day", jwt.ValidateToken, controllerAppointment.BloquearDia);
+router.post("/appointments/unblock-day", jwt.ValidateToken, controllerAppointment.DesbloquearDia);
 
 // Rotas de admin
 router.post("/admin/register", controllerUser.InserirAdmin);

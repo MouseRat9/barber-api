@@ -88,4 +88,88 @@ async function Editar(id_appointment, id_user, id_barber, id_service, booking_da
     return { id_appointment };
 }
 
-export default { Listar, Inserir, Excluir, ListarId, Editar };
+// Função: Listar bloqueios de dias
+async function ListarBloqueios(data, id_barber = null) {
+    try {
+        let filtro = [data];
+        let sql = `SELECT * FROM blocked_days WHERE block_date = ?`;
+        
+        if (id_barber) {
+            // Se um id_barber específico for fornecido, procuramos bloqueios específicos para este barbeiro
+            // OU bloqueios gerais (onde id_barber é NULL)
+            sql += " AND (id_barber = ? OR id_barber IS NULL)";
+            filtro.push(id_barber);
+        } else {
+            // Se id_barber for null, procuramos apenas bloqueios gerais
+            sql += " AND id_barber IS NULL";
+        }
+        
+        const bloqueios = await query(sql, filtro);
+        return bloqueios;
+    } catch (error) {
+        console.error("Erro ao listar bloqueios:", error);
+        throw error;
+    }
+}
+
+// Função: Inserir bloqueio de dia
+async function InserirBloqueio(data, id_barber) {
+    try {
+        // Verifica se já existe um bloqueio para esta data e barbeiro
+        const bloqueiosExistentes = await ListarBloqueios(data, id_barber);
+        
+        if (bloqueiosExistentes.length > 0) {
+            return { message: "Este dia já está bloqueado." };
+        }
+        
+        let sql = `
+            INSERT INTO blocked_days(block_date, id_barber)
+            VALUES(?, ?) RETURNING id_block
+        `;
+        
+        const bloqueio = await query(sql, [data, id_barber]);
+        return { 
+            message: "Dia bloqueado com sucesso.", 
+            id_block: bloqueio[0].id_block 
+        };
+    } catch (error) {
+        console.error("Erro ao inserir bloqueio:", error);
+        throw error;
+    }
+}
+
+// Função: Remover bloqueio de dia
+async function RemoverBloqueio(data, id_barber) {
+    try {
+        let filtro = [data];
+        let sql = `DELETE FROM blocked_days WHERE block_date = ?`;
+        
+        if (id_barber) {
+            // Se um id_barber específico for fornecido, removemos apenas o bloqueio para este barbeiro
+            sql += " AND id_barber = ?";
+            filtro.push(id_barber);
+        } else {
+            // Se id_barber for null, removemos apenas os bloqueios gerais (onde id_barber é NULL)
+            sql += " AND id_barber IS NULL";
+        }
+        
+        await query(sql, filtro);
+        return { 
+            message: "Dia desbloqueado com sucesso." 
+        };
+    } catch (error) {
+        console.error("Erro ao remover bloqueio:", error);
+        throw error;
+    }
+}
+
+export default { 
+    Listar, 
+    Inserir, 
+    Excluir, 
+    ListarId, 
+    Editar,
+    ListarBloqueios,
+    InserirBloqueio,
+    RemoverBloqueio
+};

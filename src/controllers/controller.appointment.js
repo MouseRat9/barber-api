@@ -39,6 +39,10 @@ async function Inserir(req, res) {
     booking_hour
   );
 
+  if (appointment.error) {
+    return res.status(400).json(appointment); // Enviamos o objeto completo com error e message
+  }
+
   res.status(201).json(appointment);
 }
 
@@ -61,6 +65,10 @@ async function InserirAdmin(req, res) {
     booking_hour
   );
 
+  if (appointment.error) {
+    return res.status(400).json(appointment); // Enviamos o objeto completo com error e message
+  }
+
   res.status(201).json(appointment);
 }
 
@@ -77,28 +85,113 @@ async function EditarAdmin(req, res) {
     booking_hour
   );
 
+  if (appointment.error) {
+    return res.status(400).json(appointment); // Enviamos o objeto completo com error e message
+  }
+
   res.status(200).json(appointment);
 }
-
 
 async function VerificarDisponibilidade(req, res) {
     const { id_barber, date } = req.query;
     
-    if (!id_barber || !date) {
-        return res.status(400).json({ error: "Parâmetros id_barber e date são obrigatórios" });
+    if (!date) {
+        return res.status(400).json({ error: "Parâmetro date é obrigatório" });
     }
     
     try {
-        const resultado = await serviceAppointment.listarHorariosIndisponiveis(id_barber, date);
+        // Converte string vazia para null
+        const barberID = id_barber === "" ? null : id_barber;
+        const resultado = await serviceAppointment.listarHorariosIndisponiveis(barberID, date);
         
         if (resultado.error) {
-            return res.status(400).json({ error: resultado.message });
+            return res.status(400).json(resultado);
         }
         
         return res.status(200).json(resultado);
     } catch (error) {
-        return res.status(500).json({ error: "Erro interno ao verificar disponibilidade" });
+        console.error("Erro ao verificar disponibilidade:", error);
+        return res.status(500).json({ 
+            error: "Erro interno ao verificar disponibilidade",
+            message: error.message 
+        });
     }
 }
 
-export default { ListarByUser, Inserir, Excluir, Listar, ListarId, InserirAdmin, EditarAdmin, VerificarDisponibilidade };
+// Função: Bloquear um dia para agendamentos
+async function BloquearDia(req, res) {
+  const { date, id_barber } = req.body;
+  
+  if (!date) {
+      return res.status(400).json({ error: "A data é obrigatória" });
+  }
+  
+  try {
+      // Converte string vazia para null
+      const barberID = id_barber === "" ? null : id_barber;
+      const resultado = await serviceAppointment.bloquearDia(date, barberID);
+      
+      if (resultado.error) {
+          return res.status(400).json(resultado);
+      }
+      
+      return res.status(201).json(resultado);
+  } catch (error) {
+      console.error("Erro ao bloquear dia:", error);
+      return res.status(500).json({ 
+          error: "Erro interno ao bloquear dia",
+          message: error.message 
+      });
+  }
+}
+
+// Função: Desbloquear um dia para agendamentos
+async function DesbloquearDia(req, res) {
+  const { date, id_barber } = req.body;
+  
+  if (!date) {
+      return res.status(400).json({ error: "A data é obrigatória" });
+  }
+  
+  try {
+      // Converte string vazia para null
+      const barberID = id_barber === "" ? null : id_barber;
+      
+      // Verificar explicitamente se o dia está bloqueado antes de tentar desbloquear
+      const diaBloqueado = await serviceAppointment.verificarBloqueio(date, barberID);
+      
+      if (!diaBloqueado) {
+          return res.status(400).json({ 
+              error: "DIA_NAO_BLOQUEADO", 
+              message: "Este dia não está bloqueado para o barbeiro selecionado." 
+          });
+      }
+      
+      const resultado = await serviceAppointment.desbloquearDia(date, barberID);
+      
+      if (resultado.error) {
+          return res.status(400).json(resultado);
+      }
+      
+      return res.status(200).json(resultado);
+  } catch (error) {
+      console.error("Erro ao desbloquear dia:", error);
+      return res.status(500).json({ 
+          error: "Erro interno ao desbloquear dia",
+          message: error.message 
+      });
+  }
+}
+
+export default { 
+  ListarByUser, 
+  Inserir, 
+  Excluir, 
+  Listar, 
+  ListarId, 
+  InserirAdmin, 
+  EditarAdmin, 
+  VerificarDisponibilidade,
+  BloquearDia,
+  DesbloquearDia
+};
