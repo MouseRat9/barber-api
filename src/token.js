@@ -8,6 +8,9 @@ const secretToken = process.env.JWT_SECRET || "chave_segura_padrao_nao_use_em_pr
 
 function CreateToken(id_user) {
     try {
+        if (!id_user) {
+            throw new Error("ID do usuário não fornecido para criação do token");
+        }
         const token = jwt.sign({ id_user }, secretToken, { expiresIn: '7d' }); // Aumentando para 7 dias
         return token;
     } catch (error) {
@@ -43,6 +46,11 @@ function ValidateToken(req, res, next) {
                 return res.status(401).json({ error: "Token expirado. Por favor, faça login novamente." });
             }
             return res.status(401).json({ error: "Token inválido. Por favor, faça login novamente." });
+        }
+        
+        // Verificar se decoded e id_user existem
+        if (!decoded || decoded.id_user === undefined) {
+            return res.status(401).json({ error: "Token inválido ou mal formado. Por favor, faça login novamente." });
         }
         
         req.id_user = decoded.id_user;
