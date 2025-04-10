@@ -1,95 +1,129 @@
 import serviceAppointment from '../services/service.appointment.js';
 
 async function ListarByUser(req, res) {
-  const id_user = req.id_user;
-  const appointments = await serviceAppointment.Listar(id_user);
-
-  res.status(200).json(appointments);
+  try {
+    const id_user = req.id_user;
+    const appointments = await serviceAppointment.Listar(id_user);
+    res.status(200).json(appointments);
+  } catch (error) {
+    console.error("Erro ao listar agendamentos:", error);
+    res.status(500).json({ error: "Erro ao listar agendamentos", message: error.message });
+  }
 }
 
 async function Listar(req, res) {
-  const dt_start = req.query.dt_start;
-  const dt_end = req.query.dt_end;
-  const id_barber = req.query.id_barber;
-  const appointments = await serviceAppointment.Listar(
-    0,
-    dt_start,
-    dt_end,
-    id_barber
-  );
+  try {
+    const dt_start = req.query.dt_start;
+    const dt_end = req.query.dt_end;
+    const id_barber = req.query.id_barber;
+    const appointments = await serviceAppointment.Listar(
+      0,
+      dt_start,
+      dt_end,
+      id_barber
+    );
 
-  res.status(200).json(appointments);
+    res.status(200).json(appointments);
+  } catch (error) {
+    console.error("Erro ao listar agendamentos:", error);
+    res.status(500).json({ error: "Erro ao listar agendamentos", message: error.message });
+  }
 }
 
 async function ListarId(req, res) {
-  const id_appointment = req.params.id_appointment;
-  const appointments = await serviceAppointment.ListarId(id_appointment);
+  try {
+    const id_appointment = req.params.id_appointment;
+    const appointments = await serviceAppointment.ListarId(id_appointment);
 
-  res.status(200).json(appointments);
+    res.status(200).json(appointments);
+  } catch (error) {
+    console.error("Erro ao buscar agendamento:", error);
+    res.status(500).json({ error: "Erro ao buscar agendamento", message: error.message });
+  }
 }
 
 async function Inserir(req, res) {
-  const id_user = req.id_user;
-  const { id_barber, id_service, booking_date, booking_hour } = req.body;
-  const appointment = await serviceAppointment.Inserir(
-    id_user,
-    id_barber,
-    id_service,
-    booking_date,
-    booking_hour
-  );
+  try {
+    const id_user = req.id_user;
+    const { id_barber, id_service, booking_date, booking_hour } = req.body;
+    const appointment = await serviceAppointment.Inserir(
+      id_user,
+      id_barber,
+      id_service,
+      booking_date,
+      booking_hour
+    );
 
-  if (appointment.error) {
-    return res.status(400).json(appointment); // Enviamos o objeto completo com error e message
+    if (appointment.error) {
+      return res.status(400).json(appointment);
+    }
+
+    res.status(201).json(appointment);
+  } catch (error) {
+    console.error("Erro ao inserir agendamento:", error);
+    res.status(500).json({ error: "Erro ao inserir agendamento", message: error.message });
   }
-
-  res.status(201).json(appointment);
 }
 
 async function Excluir(req, res) {
-  const id_user = req.id_user;
-  const id_appointment = req.params.id_appointment;
-  const appointment = await serviceAppointment.Excluir(id_user, id_appointment);
+  try {
+    const id_user = req.id_user;
+    const id_appointment = req.params.id_appointment;
+    const appointment = await serviceAppointment.Excluir(id_user, id_appointment);
 
-  res.status(200).json(appointment);
+    res.status(200).json(appointment);
+  } catch (error) {
+    console.error("Erro ao excluir agendamento:", error);
+    res.status(500).json({ error: "Erro ao excluir agendamento", message: error.message });
+  }
 }
 
 async function InserirAdmin(req, res) {
-  const { id_user, id_barber, id_service, booking_date, booking_hour } =
-    req.body;
-  const appointment = await serviceAppointment.Inserir(
-    id_user,
-    id_barber,
-    id_service,
-    booking_date,
-    booking_hour
-  );
+  try {
+    const { id_user, id_barber, id_service, booking_date, booking_hour } =
+      req.body;
+    const appointment = await serviceAppointment.Inserir(
+      id_user,
+      id_barber,
+      id_service,
+      booking_date,
+      booking_hour
+    );
 
-  if (appointment.error) {
-    return res.status(400).json(appointment); // Enviamos o objeto completo com error e message
+    if (appointment.error) {
+      return res.status(400).json(appointment);
+    }
+
+    res.status(201).json(appointment);
+  } catch (error) {
+    console.error("Erro ao inserir agendamento (admin):", error);
+    res.status(500).json({ error: "Erro ao inserir agendamento", message: error.message });
   }
-
-  res.status(201).json(appointment);
 }
 
 async function EditarAdmin(req, res) {
-  const id_appointment = req.params.id_appointment;
-  const { id_user, id_barber, id_service, booking_date, booking_hour } =
-    req.body;
-  const appointment = await serviceAppointment.Editar(
-    id_appointment,
-    id_user,
-    id_barber,
-    id_service,
-    booking_date,
-    booking_hour
-  );
+  try {
+    const id_appointment = req.params.id_appointment;
+    const { id_user, id_barber, id_service, booking_date, booking_hour } =
+      req.body;
+    const appointment = await serviceAppointment.Editar(
+      id_appointment,
+      id_user,
+      id_barber,
+      id_service,
+      booking_date,
+      booking_hour
+    );
 
-  if (appointment.error) {
-    return res.status(400).json(appointment); // Enviamos o objeto completo com error e message
+    if (appointment.error) {
+      return res.status(400).json(appointment);
+    }
+
+    res.status(200).json(appointment);
+  } catch (error) {
+    console.error("Erro ao editar agendamento (admin):", error);
+    res.status(500).json({ error: "Erro ao editar agendamento", message: error.message });
   }
-
-  res.status(200).json(appointment);
 }
 
 async function VerificarDisponibilidade(req, res) {
@@ -118,7 +152,6 @@ async function VerificarDisponibilidade(req, res) {
     }
 }
 
-// Função: Bloquear um dia para agendamentos
 async function BloquearDia(req, res) {
   const { date, id_barber } = req.body;
   
@@ -145,7 +178,6 @@ async function BloquearDia(req, res) {
   }
 }
 
-// Função: Desbloquear um dia para agendamentos
 async function DesbloquearDia(req, res) {
   const { date, id_barber } = req.body;
   
