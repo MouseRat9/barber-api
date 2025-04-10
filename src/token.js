@@ -1,33 +1,51 @@
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv';
 
-dotenv.config(); // Carrega as variáveis do arquivo .env
+dotenv.config();
 
-const secretToken = process.env.JWT_SECRET; // Usar a chave secreta do arquivo .env
+// Usar uma chave secreta segura - verificar se está definida no .env
+const secretToken = process.env.JWT_SECRET || "chave_segura_padrao_nao_use_em_producao";
 
 function CreateToken(id_user) {
-    const token = jwt.sign({ id_user }, secretToken, { expiresIn: '1d' }); // Expira em 1 dia
-    return token;
+    try {
+        const token = jwt.sign({ id_user }, secretToken, { expiresIn: '7d' }); // Aumentando para 7 dias
+        return token;
+    } catch (error) {
+        console.error("Erro ao criar token:", error);
+        throw error;
+    }
 }
 
 function ValidateToken(req, res, next) {
     const authToken = req.headers.authorization;
     
     if (!authToken) {
-        return res.status(401).json({ error: "Token não fornecido. Por favor, forneça um token válido." });
+        return res.status(401).json({ error: "Token não fornecido. Por favor, faça login novamente." });
     }
 
-    const [bearer, token] = authToken.split(" ");
-    
-    if (bearer !== 'Bearer') {
+    // Verifica se o token tem o formato correto (Bearer token)
+    const parts = authToken.split(" ");
+    if (parts.length !== 2) {
         return res.status(401).json({ error: "Formato de token inválido. Use 'Bearer <token>'." });
     }
 
-    jwt.verify(token, secretToken, (err, tokenDecoded) => {
+    const [scheme, token] = parts;
+    
+    if (!/^Bearer$/i.test(scheme)) {
+        return res.status(401).json({ error: "Formato de token inválido. Use 'Bearer <token>'." });
+    }
+
+    // Verifica o token
+    jwt.verify(token, secretToken, (err, decoded) => {
         if (err) {
-            return res.status(401).json({ error: "Token inválido. Por favor, verifique seu token." });
+            console.error("Erro na verificação do token:", err);
+            if (err.name === "TokenExpiredError") {
+                return res.status(401).json({ error: "Token expirado. Por favor, faça login novamente." });
+            }
+            return res.status(401).json({ error: "Token inválido. Por favor, faça login novamente." });
         }
-        req.id_user = tokenDecoded.id_user;
+        
+        req.id_user = decoded.id_user;
         next();
     });
 }
